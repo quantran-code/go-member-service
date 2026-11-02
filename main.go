@@ -1,27 +1,30 @@
-// Command member-service owns library members: who they are and how to reach them.
+// Command member-service owns library members.
 package main
 
 import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	dsn := os.Getenv("DB_PATH")
-	if dsn == "" {
-		dsn = "members.db"
-	}
-	db, err := Open(dsn)
-	if err != nil {
-		log.Fatalf("database: %v", err)
-	}
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8081"
 	}
 	log.Printf("member service listening on :%s", port)
-	if err := http.ListenAndServe(":"+port, NewRouter(db)); err != nil {
-		log.Fatal(err)
-	}
+	log.Fatal(http.ListenAndServe(":"+port, NewRouter()))
+}
+
+// NewRouter wires the member API.
+func NewRouter() http.Handler {
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	return r
 }
