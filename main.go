@@ -23,8 +23,12 @@ func NewRouter() http.Handler {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(RequestIDMiddleware())
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	members := NewMemberStore()
+	r.GET("/members/:id", handleGetMember(members))
 	return r
 }
